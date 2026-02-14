@@ -91,8 +91,19 @@ class QuickCreateWindow:
     def _do_force_focus(self):
         try:
             import ctypes
-            ctypes.windll.user32.SetForegroundWindow(self.root.winfo_id())
-            ctypes.windll.user32.ShowWindow(self.root.winfo_id(), 9)  # SW_RESTORE
+            import pygetwindow as gw
+            import pyautogui
+            
+            # 使用 Windows API 强制窗口到前台
+            hwnd = self.root.winfo_id()
+            ctypes.windll.user32.SetForegroundWindow(hwnd)
+            ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+            ctypes.windll.user32.SetFocus(hwnd)
+            
+            # 使用 pyautogui 点击窗口区域
+            x = self.root.winfo_x() + 10
+            y = self.root.winfo_y() + 10
+            pyautogui.click(x, y)
         except Exception:
             pass
         
