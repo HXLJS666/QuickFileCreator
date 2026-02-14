@@ -1,57 +1,59 @@
 import os
+import urllib.parse
+import pythoncom
 import win32gui
-import win32process
-import win32con
 import win32api
+import win32process
+import win32com.client
 
 
 def get_explorer_path():
-    hwnd = win32gui.GetForegroundWindow()
-    class_name = win32gui.GetClassName(hwnd)
-    
-    if class_name not in ('CabinetWClass', 'ExploreWClass'):
-        return None
-    
     try:
-        return _get_path_from_explorer_hwnd(hwnd)
-    except Exception:
-        return None
-
-
-def _get_path_from_explorer_hwnd(hwnd):
-    import comtypes.client
-    shell_windows = comtypes.client.CreateObject("Shell.Application").Windows()
-    
-    for i in range(shell_windows.Count):
-        window = shell_windows.Item(i)
-        if window.HWND == hwnd:
-            path = os.path.dirname(window.LocationURL)
-            from urllib.parse import unquote, urlparse
-            parsed = urlparse(window.LocationURL)
-            return unquote(parsed.path)
-    
-    pid = win32process.GetWindowThreadProcessId(hwnd)[1]
-    return _get_path_via_pidl(pid)
-
-
-def _get_path_via_pidl(pid):
-    try:
-        import ctypes
-        from ctypes import wintypes
-        
-        ole32 = ctypes.windll.ole32
-        ole32.CoInitialize(None)
-        
-        shell32 = ctypes.windll.shell32
+        pythoncom.CoInitialize()
         hwnd = win32gui.GetForegroundWindow()
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        hndl = win32api.OpenProcess(0x400 | 0x10, False, pid)
+        path = win32process.GetModuleFileNameEx(hndl, 0)
+
+        if "explorer.exe" in path.lower():
+            shell = win32com.client.Dispatch("Shell.Application")
+            windows = shell.Windows()
+            for i in range(windows.Count):
+                window = windows.Item(i)
+                if window.HWND == hwnd:
+                    location_url = window.LocationURL.replace("file:///", "")
+                    decoded_path = urllib.parse.unquote(location_url)
+                    return decoded_path.replace("/", "\\")
         
-        buf = ctypes.create_unicode_buffer(wintypes.MAX_PATH)
-        if shell32.SHGetFolderPathW(hwnd, 0, None, 0, buf) == 0:
-            return buf.value
+        for hwnd in get_all_explorer_windows():
+            shell = win32com.client.Dispatch("Shell.Application")
+            windows = shell.Windows()
+            for i in range(windows.Count):
+                window = windows.Item(i)
+                if window.HWND == hwnd:
+                    location_url = window.LocationURL.replace("file:///", "")
+                    decoded_path = urllib.parse.unquote(location_url)
+                    return decoded_path.replace("/", "\\")
+                    
+        return None
     except Exception:
-        pass
+        return None
+    finally:
+        pythoncom.CoUninitialize()
+
+
+def get_all_explorer_windows():
+    windows = []
     
-    return None
+    def callback(hwnd, _):
+        if win32gui.IsWindowVisible(hwnd):
+            class_name = win32gui.GetClassName(hwnd)
+            if class_name in ('CabinetWClass', 'ExploreWClass'):
+                windows.append(hwnd)
+        return True
+    
+    win32gui.EnumWindows(callback, None)
+    return windows
 
 
 def get_desktop_path():
