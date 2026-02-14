@@ -1,0 +1,9 @@
+HOTKEY = 'ctrl+alt+n'
+WINDOW_WIDTH = 400
+WINDOW_HEIGHT = 50
+WINDOW_BG_COLOR = '#2d2d2d'
+ENTRY_BG_COLOR = '#3d3d3d'
+ENTRY_FG_COLOR = '#ffffff'
+ENTRY_FONT = ('Microsoft YaHei UI', 12)
+PLACEHOLDER_TEXT = '输入文件名（带后缀创建文件，不带后缀创建文件夹）...'
+PLACEHOLDER_COLOR = '#888888'
