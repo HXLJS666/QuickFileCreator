@@ -68,10 +68,14 @@ class QuickCreateWindow:
                 self._show_feedback(success, message)
             else:
                 self._show_feedback(False, error)
-        self._close()
+        self.root.quit()
+        self.root.destroy()
+        return "break"
         
     def _on_escape(self, event):
-        self._close()
+        self.root.quit()
+        self.root.destroy()
+        return "break"
         
     def _on_click_outside(self, event):
         widget = event.widget
@@ -82,13 +86,22 @@ class QuickCreateWindow:
         pass
         
     def _force_focus(self):
-        self.root.after(10, self._do_force_focus)
+        self.root.after(50, self._do_force_focus)
         
     def _do_force_focus(self):
+        try:
+            import ctypes
+            ctypes.windll.user32.SetForegroundWindow(self.root.winfo_id())
+            ctypes.windll.user32.ShowWindow(self.root.winfo_id(), 9)  # SW_RESTORE
+        except Exception:
+            pass
+        
         self.root.deiconify()
         self.root.lift()
         self.root.focus_force()
         self.entry.focus_set()
+        self.entry.select_range(0, tk.END)
+        
         if self.entry.get() == config.PLACEHOLDER_TEXT:
             self.entry.delete(0, tk.END)
             self.entry.config(fg=config.ENTRY_FG_COLOR)
