@@ -28,12 +28,30 @@ class QuickCreateWindow:
         
     def _setup_window(self):
         """设置窗口位置和大小"""
+        x, y = self._get_mouse_position()
+        
+        # 确保窗口不超出屏幕边界
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        x = (screen_width - config.WINDOW_WIDTH) // 2
-        y = (screen_height - config.WINDOW_HEIGHT) // 2
+        
+        if x + config.WINDOW_WIDTH > screen_width:
+            x = screen_width - config.WINDOW_WIDTH - 10
+        if y + config.WINDOW_HEIGHT > screen_height:
+            y = screen_height - config.WINDOW_HEIGHT - 10
+        
         self.root.geometry(f'{config.WINDOW_WIDTH}x{config.WINDOW_HEIGHT}+{x}+{y}')
         self.root.configure(bg=config.WINDOW_BG_COLOR)
+        
+    def _get_mouse_position(self):
+        """获取鼠标当前位置"""
+        try:
+            import pyautogui
+            return pyautogui.position()
+        except:
+            # 如果获取失败，返回屏幕中央
+            screen_width = self.root.winfo_screenwidth()
+            screen_height = self.root.winfo_screenheight()
+            return (screen_width - config.WINDOW_WIDTH) // 2, (screen_height - config.WINDOW_HEIGHT) // 2
         
     def _setup_ui(self):
         """创建用户界面组件"""
@@ -149,14 +167,24 @@ class QuickCreateWindow:
         self.error_timer = None
         
     def _reposition_window(self):
-        """重新定位窗口到屏幕中央"""
+        """重新定位窗口（保持鼠标位置不变）"""
         self.root.update_idletasks()
         width = self.root.winfo_width()
         height = self.root.winfo_height()
+        
+        # 获取当前位置
+        x = self.root.winfo_x()
+        y = self.root.winfo_y()
+        
+        # 确保窗口不超出屏幕边界
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
+        
+        if x + width > screen_width:
+            x = screen_width - width - 10
+        if y + height > screen_height:
+            y = screen_height - height - 10
+        
         self.root.geometry(f'{width}x{height}+{x}+{y}')
         
     def _force_focus(self):
