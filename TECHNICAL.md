@@ -1,6 +1,6 @@
 # QuickFileCreator 技术文档
 
-本文档详细说明 QuickFileCreator 的技术实现原理和架构设计。
+本文档详细说明 QuickFileCreator 的技术实现原理和架构设计。r
 
 ---
 
